@@ -1,54 +1,61 @@
-# Lazorkit Integration Tutorials
+#  Lazorkit Integration Tutorials
 
-## Tutorial 1: Configuring the Provider
-To use Lazorkit in your React app, you must wrap your root component with the `LazorkitProvider`. This handles the WebAuthn session state.
+## Tutorial 1: Setting up the Vendor Engine
+Since the Lazorkit SDK is currently in private beta, we use a local vendor adapter to simulate the core features securely while connecting to the real blockchain.
 
 ### Implementation
-1. Import the provider from the SDK.
-2. Wrap your `App` component.
+1. Create a `vendor` folder in your `src` directory.
+2. Add the `lazorkit-wallet.tsx` adapter which handles:
+   - WebAuthn (Passkey) triggers via `navigator.credentials`
+   - Solana Devnet connections via `@solana/web3.js`
+   - Local session management
 
 ```tsx
-import { LazorkitProvider } from './context/LazorkitContext';
+// src/App.tsx
+import { LazorkitProvider } from './vendor/lazorkit-wallet';
 
 function Root() {
   return (
-    <LazorkitProvider>
+    <LazorkitProvider portalUrl="[https://portal.lazor.sh](https://portal.lazor.sh)">
       <App />
     </LazorkitProvider>
   );
 }
 ```
 
-## Tutorial 2: Creating a Smart Wallet (Passkey)
-The `connect()` function triggers the browser's native credential manager (FaceID/TouchID).
+## Tutorial 2: Authentication (Passkey Login)
+Lazorkit replaces the typical "Connect Wallet" modal with a biometric prompt.
 
 ### Code Example
 ```tsx
-const { connect } = useLazorkit();
+const { connect, isConnecting } = useWallet();
 
 const handleLogin = async () => {
   try {
-    // Triggers "Use FaceID to sign in?"
-    await connect();
+    // Triggers the native browser FaceID/TouchID prompt
+    await connect(); 
   } catch (err) {
-    console.error("User cancelled biometric prompt");
+    console.error("User cancelled passkey");
   }
 };
 ```
 
-## Tutorial 3: Sending Gasless Transactions
-Lazorkit Paymasters allow you to sponsor fees for your users.
+## Tutorial 3: Gasless Transactions
+We abstract the gas fee payment using a Paymaster configuration.
 
 ### Code Example
 ```tsx
-const { sendGaslessTx } = useLazorkit();
+const { signAndSendTransaction } = useWallet();
 
 const sendUSDC = async () => {
-  // Standard Solana Instruction
   const ix = SystemProgram.transfer({ ... });
 
-  // The SDK wraps this in a meta-transaction and sends to Paymaster
-  const signature = await sendGaslessTx(ix);
-  console.log("Sponsored Tx:", signature);
+  // feeToken: 'USDC' tells the Paymaster to sponsor the SOL fee
+  const signature = await signAndSendTransaction({
+    instructions: [ix],
+    transactionOptions: { feeToken: 'USDC' }
+  });
+  
+  console.log("Sponsored Tx Hash:", signature);
 };
 ```

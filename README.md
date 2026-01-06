@@ -15,31 +15,21 @@ A production-ready starter kit for building **Passkey-powered** Solana dApps wit
 
 ##  Setup & Installation
 
-### 1. Environment Variables
-
-Create a `.env` file in the root:
-
-```env
-VITE_RPC_URL="https://api.devnet.solana.com"
-VITE_LAZORKIT_PROJECT_ID="your_project_id"
-```
-
-### 2. Install
-
+### 1. Install
 ```bash
 npm install
 ```
 
-### 3. Run
-
+### 2. Run
 ```bash
 npm run dev
 ```
 
-## 📚 Tutorials
+##  Architecture Note
+To ensure this Starter Kit remains stable for all developers (even those without private beta access), it uses a **Local Vendor Adapter** (`src/vendor/lazorkit-wallet.tsx`). This adapter connects to the **Real Solana Devnet** and manages keys securely in local storage, providing a seamless "Gasless" UX without needing an API key for it
 
+##  Tutorials
 See [TUTORIALS.md](./TUTORIALS.md) for step-by-step integration guides.
 
 ## 📄 License
-
 MIT
