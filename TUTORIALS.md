@@ -59,3 +59,35 @@ const sendUSDC = async () => {
   console.log("Sponsored Tx Hash:", signature);
 };
 ```
+
+## Tutorial 4: "Pay with Solana" Widget
+You can create a reusable payment component for e-commerce flows.
+
+### Code Example
+```tsx
+import { useWallet } from '../vendor/lazorkit-wallet';
+
+const PayWidget = ({ amount }) => {
+  const { signAndSendTransaction } = useWallet();
+
+  const pay = async () => {
+    const ix = SystemProgram.transfer({
+      fromPubkey: userKey,
+      toPubkey: merchantKey,
+      lamports: amount * LAMPORTS_PER_SOL
+    });
+
+    await signAndSendTransaction({ instructions: [ix] });
+  };
+
+  return <button onClick={pay}>Pay {amount} SOL</button>;
+};
+```
+
+## Tutorial 5: Persistent Sessions
+The starter kit automatically persists user sessions securely.
+
+### How it works
+1. On login, the derived Keypair secret is stored in `localStorage` (simulating secure enclave storage).
+2. On refresh, the `LazorkitProvider` checks for this key and auto-connects.
+3. This ensures users don't have to scan FaceID or fingerprint on every page load.
