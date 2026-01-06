@@ -1,8 +1,8 @@
 #  Lazorkit React Starter
 
-> **1st Place Bounty Submission**
+> **Superteam Place Bounty Submission**
 >
->  **Live Demo:** [PASTE_YOUR_VERCEL_LINK_HERE]
+>  **Live Demo:** [https://lazorkit-solana-starter.vercel.app/]
 
 A production-ready starter kit for building **Passkey-powered** Solana dApps with **Gasless Transactions**. It demonstrates how to onboard users instantly with Passkeys and execute gasless transactions using Smart Wallets.
 
