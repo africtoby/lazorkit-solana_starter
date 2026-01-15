@@ -6,10 +6,15 @@ import {
   CheckCircle2, ArrowUpRight, ArrowDownLeft, Zap, X, QrCode, Clock, ExternalLink, ShoppingBag 
 } from 'lucide-react';
 
+// --- CONFIGURATION USING ENVIRONMENT VARIABLES ---
+// Using Vite's import.meta.env. Fallbacks are provided for Devnet stability.
 const CONFIG = {
-  RPC_URL: "https://api.devnet.solana.com",
-  PORTAL_URL: "https://portal.lazor.sh",
-  PAYMASTER: { paymasterUrl: "https://kora.devnet.lazorkit.com" }
+  RPC_URL: import.meta.env.VITE_SOLANA_RPC_URL || "https://api.devnet.solana.com",
+  PORTAL_URL: import.meta.env.VITE_LAZORKIT_PORTAL_URL || "https://portal.lazor.sh",
+  PAYMASTER: { 
+    paymasterUrl: import.meta.env.VITE_PAYMASTER_URL || "https://kora.devnet.lazorkit.com" 
+  },
+  API_KEY: import.meta.env.VITE_LAZORKIT_API_KEY || "" // Crucial for SDK authentication
 };
 
 type Transaction = {
@@ -50,7 +55,7 @@ const TransactionModal = () => {
   );
 };
 
-// --- PAY WIDGET COMPONENT (Internal for Shared State) ---
+// --- PAY WIDGET COMPONENT ---
 const PayWidget = ({ recipient, amount, label, onSuccess }: { recipient: string, amount: string, label: string, onSuccess: (sig: string) => void }) => {
   const { signAndSendTransaction, wallet } = useWallet();
   const [loading, setLoading] = useState(false);
@@ -64,8 +69,12 @@ const PayWidget = ({ recipient, amount, label, onSuccess }: { recipient: string,
         toPubkey: new PublicKey(recipient),
         lamports: parseFloat(amount) * LAMPORTS_PER_SOL
       });
-      const sig = await signAndSendTransaction({ instructions: [ix], transactionOptions: { feeToken: 'USDC' } });
-      onSuccess(sig); // Trigger parent success
+      // Note: FeeToken is usually USDC or SOL for sponsored transactions
+      const sig = await signAndSendTransaction({ 
+        instructions: [ix], 
+        transactionOptions: { feeToken: 'USDC' } 
+      });
+      onSuccess(sig);
     } catch (e) { console.error(e); }
     setLoading(false);
   };
@@ -81,7 +90,7 @@ const PayWidget = ({ recipient, amount, label, onSuccess }: { recipient: string,
   );
 };
 
-// 1. Login Screen
+// --- LOGIN VIEW ---
 const LoginView = () => {
   const { connect, isConnecting } = useWallet();
   return (
@@ -103,7 +112,7 @@ const LoginView = () => {
   );
 };
 
-// 2. Dashboard
+// --- DASHBOARD VIEW ---
 const DashboardView = () => {
   const { wallet, disconnect, signAndSendTransaction } = useWallet();
   const [amount, setAmount] = useState('');
@@ -130,7 +139,6 @@ const DashboardView = () => {
   const balanceUsd = (balance * 145.20).toFixed(2);
   const walletAddress = wallet?.smartWallet || "";
 
-  // Shared Success Handler
   const handleSuccess = (signature: string, sentAmount: string) => {
     setTxHash(signature);
     setBalance(prev => prev - parseFloat(sentAmount));
@@ -143,7 +151,6 @@ const DashboardView = () => {
       hash: signature
     };
     setHistory(prev => [newTx, ...prev]);
-    // Scroll to top to see message
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -193,7 +200,6 @@ const DashboardView = () => {
              </div>
           </div>
 
-          {/* 🚀 SUCCESS MESSAGE (MOVED TO TOP) */}
           {txHash && (
             <div className="p-4 bg-green-50 border border-green-200 rounded-2xl flex items-start gap-3 animate-in fade-in slide-in-from-bottom-2 mb-6 shadow-sm">
               <CheckCircle2 className="text-green-600 shrink-0 mt-0.5" />
@@ -210,7 +216,6 @@ const DashboardView = () => {
             <div><p className="text-xs font-bold text-green-800">Gasless Mode Active</p><p className="text-[10px] text-green-700">Fees sponsored by Paymaster.</p></div>
           </div>
 
-          {/* Pay Widget (Linked to Success State) */}
           <PayWidget 
             label="Demo Store Item" 
             amount="0.05" 
@@ -242,7 +247,6 @@ const DashboardView = () => {
             </div>
           </div>
         </main>
-
         {showReceive && <div className="absolute inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 animate-in fade-in"><div className="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-in slide-in-from-bottom-10"><div className="flex justify-between items-center mb-6"><h3 className="font-bold text-xl">Receive Assets</h3><button onClick={() => setShowReceive(false)} className="p-1 bg-slate-100 rounded-full hover:bg-slate-200"><X size={20}/></button></div><div className="bg-white border-2 border-dashed border-indigo-100 rounded-2xl p-8 flex flex-col items-center justify-center mb-6"><QrCode size={120} className="text-slate-900 mb-4 opacity-80" /><p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Scan to Pay</p></div><div className="bg-slate-50 p-4 rounded-xl flex items-center gap-3 border border-slate-100"><div className="flex-1 overflow-hidden"><p className="text-xs text-slate-400 font-bold uppercase mb-1">Your Address</p><p className="font-mono text-sm truncate text-slate-800">{walletAddress}</p></div><button onClick={() => navigator.clipboard.writeText(walletAddress)} className="bg-white border shadow-sm px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-slate-50">Copy</button></div></div></div>}
         <TransactionModal />
       </div>
